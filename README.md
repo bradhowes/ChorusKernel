@@ -1,7 +1,7 @@
 # ChorusKernel
 
 This is the code that generates a "chorus" effect for AUv3 audio units. Most of the DSP code is in C++ with the
-rest in Swift and Object-C++. Note that there is no user interface included in this package. There are five
+rest in Swift and Object-C++. Note that there is no user interface included in this package. There are four
 products contained in this package:
 
 * Kernel -- the C++ kernel code
