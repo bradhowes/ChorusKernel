@@ -13,15 +13,15 @@ private extension Array where Element == AUParameter {
 /**
  Definitions for the runtime parameters of the filter.
  */
-public final class AudioUnitParameters: NSObject, ParameterSource {
+public final class Parameters: NSObject, ParameterSource {
 
-  private let log = Shared.logger("AudioUnitParameters")
+  private let log = Shared.logger("Parameters")
 
   /// Array of AUParameter entities created from ParameterAddress value definitions.
   public let parameters: [AUParameter] = ParameterAddress.allCases.map { $0.parameterDefinition.parameter }
 
   /// Array of 2-tuple values that pair a factory preset name and its definition
-  public let factoryPresetValues: [(name: String, preset: FilterPreset)] = [
+  public let factoryPresetValues: [(name: String, preset: Configuration)] = [
     ("Cadet", .init(rate: 1.68, delay: 8.3, depth: 100, dry: 50, wet: 100, odd90: 0)),
     ("Wide Cadet", .init(rate: 1.68, delay: 8.3, depth: 100, dry: 50, wet: 100, odd90: 1)),
     ("Wavy", .init(rate: 5.1, delay: 8.3, depth: 100, dry: 50, wet: 100, odd90: 0)),
@@ -37,7 +37,6 @@ public final class AudioUnitParameters: NSObject, ParameterSource {
 
   /// AUParameterTree created with the parameter definitions for the audio unit
   public let parameterTree: AUParameterTree
-
   /// Obtain the parameter setting that determines how fast the LFO operates
   public var rate: AUParameter { parameters[.rate] }
   /// Obtain the parameter setting that determines the minimum delay applied incoming samples. The actual delay value is
@@ -63,7 +62,7 @@ public final class AudioUnitParameters: NSObject, ParameterSource {
   }
 }
 
-extension AudioUnitParameters {
+extension Parameters {
 
   private var missingParameter: AUParameter { fatalError() }
 
@@ -76,13 +75,23 @@ extension AudioUnitParameters {
     }
   }
 
+  /**
+   Access an AUParameter via its address.
+
+   - parameter address: the address to look for
+   - returns: the AUParameter that was found
+   */
   public subscript(address: ParameterAddress) -> AUParameter {
     parameterTree.parameter(withAddress: address.parameterAddress) ?? missingParameter
   }
 
-  public func valueFormatter(_ address: ParameterAddress) -> (AUValue) -> String {
-    self[address].valueFormatter
-  }
+  /**
+   Obtain a formatter for a parameter address. A format converts a parameter's value into a string representation.
+
+   - parameter address: the address to look for
+   - returns: the formatter for the parameter
+   */
+  public func valueFormatter(_ address: ParameterAddress) -> (AUValue) -> String { self[address].valueFormatter }
 
   private func installParameterValueFormatter() {
     parameterTree.implementorStringFromValueCallback = { param, valuePtr in
@@ -100,7 +109,7 @@ extension AudioUnitParameters {
    Accept new values for the filter settings. Uses the AUParameterTree framework for communicating the changes to the
    AudioUnit.
    */
-  public func setValues(_ preset: FilterPreset) {
+  public func setValues(_ preset: Configuration) {
     rate.value = preset.rate
     delay.value = preset.delay
     depth.value = preset.depth

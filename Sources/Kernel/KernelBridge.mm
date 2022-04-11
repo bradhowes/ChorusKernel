@@ -3,7 +3,7 @@
 #import <CoreAudioKit/CoreAudioKit.h>
 
 #import "C++/Kernel.hpp"
-#import "Kernel.h"
+#import "KernelBridge.h"
 
 @implementation KernelBridge {
   Kernel* kernel_;

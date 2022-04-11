@@ -10,7 +10,7 @@ class MockParameterHandler: AUParameterHandler {
   func get(_ parameter: AUParameter) -> AUValue { mapping[parameter.address] ?? 0.0 }
 }
 
-final class FilterPresetTests: XCTestCase {
+final class ConfigurationTests: XCTestCase {
 
   func testParameterAddress() throws {
     XCTAssertEqual(ParameterAddress.rate.rawValue, 0)
@@ -29,7 +29,7 @@ final class FilterPresetTests: XCTestCase {
   }
 
   func testParameterDefinitions() throws {
-    let aup = AudioUnitParameters()
+    let aup = Parameters()
     for (index, address) in ParameterAddress.allCases.enumerated() {
       XCTAssertTrue(aup.parameters[index] == aup[address])
     }

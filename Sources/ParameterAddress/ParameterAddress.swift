@@ -3,8 +3,9 @@ import AUv3Support
 
 /**
  These are the unique addresses for the runtime parameters used by the audio unit.
+
  NOTE: the raw values of this enum are used to index into an array of AUParameter values, so be sure to start at 0 and
- have no gaps.
+ have no gaps. Perhaps not the best way to go, but it works and is quite simple.
  */
 @objc public enum ParameterAddress: UInt64, CaseIterable {
   case rate = 0
