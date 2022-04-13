@@ -39,6 +39,7 @@
   kernel->setParameterValue(ParameterAddressWet, 60.0, 0);
   XCTAssertEqualWithAccuracy(kernel->getParameterValue(ParameterAddressWet), 60.0, 0.001);
 
+  kernel->setParameterValue(ParameterAddressOdd90, 0.0, 0);
   XCTAssertEqualWithAccuracy(kernel->getParameterValue(ParameterAddressOdd90), 0.0, 0.001);
   kernel->setParameterValue(ParameterAddressOdd90, 1.0, 0);
   XCTAssertEqualWithAccuracy(kernel->getParameterValue(ParameterAddressOdd90), 1.0, 0.001);

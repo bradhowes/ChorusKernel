@@ -101,11 +101,7 @@ private:
   }
 
   void setParameterFromEvent(const AUParameterEvent& event) noexcept {
-    if (event.rampDurationSampleFrames == 0) {
-      setParameterValue(event.parameterAddress, event.value, 0.0);
-    } else {
-      setParameterValue(event.parameterAddress, event.value, event.rampDurationSampleFrames);
-    }
+    setParameterValue(event.parameterAddress, event.value, event.rampDurationSampleFrames);
   }
 
   void doRendering(NSInteger outputBusNumber, DSPHeaders::BusBuffers ins, DSPHeaders::BusBuffers outs,
