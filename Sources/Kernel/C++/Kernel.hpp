@@ -66,22 +66,16 @@ public:
   AUValue getParameterValue(AUParameterAddress address) const noexcept;
 
 private:
-  inline static constexpr size_t TapCount = 7;
   using DelayLine = DSPHeaders::DelayBuffer<AUValue>;
-  using DelayIndices = std::array<AUValue, TapCount>;
   using LFO = DSPHeaders::LFO<AUValue>;
-
-  inline static constexpr AUValue lfoRateCalculator(AUValue base, size_t index) { return base / (index + 1); }
 
   void initialize(int channelCount, double sampleRate, double maxDelayMilliseconds) noexcept {
     samplesPerMillisecond_ = sampleRate / 1000.0;
 
-    // We use TapCount LFOs to achieve a fuller effect. First LFO runs at the `rate` frequency. The second
-    lfos_.clear();
     auto rate{rate_.get()};
-    for (int index = 0; index < TapCount; ++index) {
-      lfos_.emplace_back(sampleRate, lfoRateCalculator(rate, index), LFOWaveform::sinusoid);
-    }
+    lfo_.setSampleRate(sampleRate);
+    lfo_.setWaveform(LFOWaveform::sinusoid);
+    lfo_.setFrequency(rate, 0.0);
 
     // Size of delay buffer needs to be twice the maxDelay value since at max delay and max depth settings, the bipolar
     // indices into the delay buffer will go from delay * -1 * depth to delay * 1 * depth (approximately).
@@ -95,9 +89,7 @@ private:
 
   void setRate(AUValue rate, AUAudioFrameCount rampingDuration) {
     rate_.set(rate, rampingDuration);
-    for (size_t index = 0; index < lfos_.size(); ++index) {
-      lfos_[index].setFrequency(lfoRateCalculator(rate, index), rampingDuration);
-    }
+    lfo_.setFrequency(rate, rampingDuration);
   }
 
   void setParameterFromEvent(const AUParameterEvent& event) noexcept {
@@ -145,22 +137,16 @@ private:
 
     // Generate frames
     for (; frameCount > 0; --frameCount) {
-
-      // Calculate delay line tap indices using LFO values. If `odd90` is true, we generate two sets.
-      for (size_t index = 0; index < TapCount; ++index) {
-        evenDelays_[index] = lfos_[index].value() * displacement + tap;
-        if (odd90) {
-          oddDelays_[index] = lfos_[index].quadPhaseValue() * displacement + tap;
-        }
-        lfos_[index].increment();
-      }
+      auto evenDelay = lfo_.value() * displacement + tap;
+      auto oddDelay = lfo_.quadPhaseValue() * displacement + tap;
+      lfo_.increment();
 
       // Generate samples for each channel
       for (int channel = 0; channel < ins.size(); ++channel) {
         auto inputSample = *ins[channel]++;
         auto delayedSample = inputSample;
         if (displacement) {
-          delayedSample = getDelayedSample(delayLines_[channel], ((channel & 1) && odd90) ? oddDelays_ : evenDelays_);
+          delayedSample = delayLines_[channel].read(((channel & 1) && odd90) ? oddDelay : evenDelay);
           delayLines_[channel].write(inputSample);
         }
         *outs[channel]++ = wetMix * delayedSample + dryMix * inputSample;
@@ -169,12 +155,6 @@ private:
   }
 
   void doMIDIEvent(const AUMIDIEvent& midiEvent) noexcept {}
-
-  /// Sample is the sum of samples from various taps into the delay line divided by the number of taps.
-  AUValue getDelayedSample(const DelayLine& delayLine, const DelayIndices& indices) const noexcept {
-    return std::accumulate(indices.begin(), indices.end(), 0.0, [&](AUValue left, AUValue right) {
-      return left + delayLine.read(right); }) / TapCount;
-  }
 
   DSPHeaders::Parameters::RampingParameter<AUValue> rate_;
   DSPHeaders::Parameters::PercentageParameter<AUValue> depth_;
@@ -186,8 +166,6 @@ private:
   double samplesPerMillisecond_;
 
   std::vector<DelayLine> delayLines_;
-  std::vector<DSPHeaders::LFO<AUValue>> lfos_;
-  DelayIndices evenDelays_;
-  DelayIndices oddDelays_;
+  LFO lfo_;
   AUAudioFrameCount rampRemaining_;
 };

@@ -8,11 +8,18 @@ import AUv3Support
  have no gaps. Perhaps not the best way to go, but it works and is quite simple.
  */
 @objc public enum ParameterAddress: UInt64, CaseIterable {
+  /// The frequency in Hertz of the low-frequency oscillator (LFO) used to delay the input signal
   case rate = 0
-  case depth
+  /// The max delay in milliseconds to apply to the input signal
   case delay
+  /// Percentage that the delay tap can vary from the `delay` setting to zero. A value of 100 means full travel from
+  /// `delay` to 0, while 50 would mean oscillations between `delay` and 0.5 x `delay`.
+  case depth
+  /// Percentage of the original signal to mix into the output.
   case dry
+  /// Percentage of the delayed signal to mix into the output.
   case wet
+  /// When true, "odd" audio channels (eg. right in stereo) are shifted 90° in phase from the even channels.
   case odd90
 };
 
