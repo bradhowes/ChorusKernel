@@ -32,7 +32,7 @@ public:
 
    @param name the name to use for logging purposes.
    */
-  Kernel(std::string name) noexcept : super(name) {}
+  Kernel(std::string name) noexcept : super() {}
 
   /**
    Update kernel and buffers to support the given format and channel count
@@ -80,7 +80,6 @@ private:
     // Size of delay buffer needs to be twice the maxDelay value since at max delay and max depth settings, the bipolar
     // indices into the delay buffer will go from delay * -1 * depth to delay * 1 * depth (approximately).
     auto size = maxDelayMilliseconds * samplesPerMillisecond_ * 2.0 + 1;
-    os_log_with_type(log_, OS_LOG_TYPE_INFO, "delayLine size: %f", size);
     delayLines_.clear();
     for (auto index = 0; index < channelCount; ++index) {
       delayLines_.emplace_back(size, DelayLine::Interpolator::cubic4thOrder);

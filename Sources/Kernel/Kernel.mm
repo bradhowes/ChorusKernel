@@ -6,7 +6,6 @@
 @import ParameterAddress;
 
 void Kernel::setParameterValue(AUParameterAddress address, AUValue value, AUAudioFrameCount duration) noexcept {
-  os_log_with_type(log_, OS_LOG_TYPE_DEBUG, "setParameterValue - %llul %f %d", address, value, duration);
   assert(duration >= 0);
 
   if (duration > rampRemaining_) rampRemaining_ = duration;
