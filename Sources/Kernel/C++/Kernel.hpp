@@ -95,6 +95,16 @@ private:
     setParameterValue(event.parameterAddress, event.value, event.rampDurationSampleFrames);
   }
 
+  void doRenderingStateChanged(bool rendering) {
+    if (!rendering) {
+      rate_.stopRamping();
+      depth_.stopRamping();
+      delay_.stopRamping();
+      dryMix_.stopRamping();
+      wetMix_.stopRamping();
+    }
+  }
+
   void doRendering(NSInteger outputBusNumber, DSPHeaders::BusBuffers ins, DSPHeaders::BusBuffers outs,
                    AUAudioFrameCount frameCount) noexcept {
 
@@ -155,7 +165,7 @@ private:
 
   void doMIDIEvent(const AUMIDIEvent& midiEvent) noexcept {}
 
-  DSPHeaders::Parameters::RampingParameter<AUValue> rate_;
+  DSPHeaders::Parameters::MillisecondsParameter<AUValue> rate_;
   DSPHeaders::Parameters::PercentageParameter<AUValue> depth_;
   DSPHeaders::Parameters::MillisecondsParameter<AUValue> delay_;
   DSPHeaders::Parameters::PercentageParameter<AUValue> dryMix_;
