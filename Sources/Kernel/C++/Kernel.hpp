@@ -2,10 +2,8 @@
 
 #pragma once
 
-#include <mach/mach.h>
-
+#import <os/log.h>
 #import <algorithm>
-#import <numeric>
 #import <string>
 #import <AVFoundation/AVFoundation.h>
 
@@ -32,7 +30,11 @@ public:
 
    @param name the name to use for logging purposes.
    */
-  Kernel(std::string name) noexcept : super() {}
+  Kernel(std::string name) noexcept : super(), name_{name}, log_{os_log_create(name_.c_str(), "Kernel")}
+  {
+    os_log_debug(log_, "constructor");
+    lfo_.setWaveform(LFOWaveform::triangle);
+  }
 
   /**
    Update kernel and buffers to support the given format and channel count
@@ -107,57 +109,35 @@ private:
 
   void doRendering(NSInteger outputBusNumber, DSPHeaders::BusBuffers ins, DSPHeaders::BusBuffers outs,
                    AUAudioFrameCount frameCount) noexcept {
-
-    // If ramping one or more parameters, we must render one frame at a time. Since this is more expensive than the
-    // non-ramp case, we only do it when necessary.
-    auto rampCount = std::min(rampRemaining_, frameCount);
-    if (rampCount > 0) {
-      rampRemaining_ -= rampCount;
-      for (; rampCount > 0; --rampCount, --frameCount) {
-        renderFrames(1, ins, outs);
-      }
-    }
-
-    // Non-ramping case
-    if (frameCount > 0) {
-      renderFrames(frameCount, ins, outs);
-    }
-  }
-
-  void renderFrames(AUAudioFrameCount frameCount, DSPHeaders::BusBuffers ins, DSPHeaders::BusBuffers outs) noexcept {
-
-    // Nominal position of tap into delay line
-    auto tap = delay_.frameValue();
-
-    // Fraction of overall displacement available to move the tap
-    auto displacementFraction = depth_.frameValue();
-    assert(displacementFraction >= 0.0 && displacementFraction <= 1.0);
-
-    // Displacement is the distance from the nominal tap to a non-zero min value.
-    constexpr AUValue minTap = 1.0E-3;
-    auto displacement = std::max<AUValue>(tap - minTap, 0.0) * displacementFraction;
-
-    auto wetMix = wetMix_.frameValue();
-    assert(wetMix >= 0.0 && wetMix <= 1.0);
-    auto dryMix = dryMix_.frameValue();
-    assert(dryMix >= 0.0 && dryMix <= 1.0);
-
     auto odd90 = odd90_.get();
 
-    // Generate frames
+    // Generate frames -- note that in the ramping case, frameCount == 1
     for (; frameCount > 0; --frameCount) {
-      auto evenDelay = lfo_.value() * displacement + tap;
-      auto oddDelay = lfo_.quadPhaseValue() * displacement + tap;
+
+      // Nominal position of tap into delay line
+      auto tap = delay_.frameValue();
+
+      // Fraction of overall displacement available to move the tap
+      auto displacementFraction = depth_.frameValue();
+      assert(displacementFraction >= 0.0 && displacementFraction <= 1.0);
+
+      // Displacement is the distance from the nominal tap to a non-zero min value.
+      auto displacement = tap * displacementFraction;
+
+      auto wetMix = wetMix_.frameValue();
+      assert(wetMix >= 0.0 && wetMix <= 1.0);
+      auto dryMix = dryMix_.frameValue();
+      assert(dryMix >= 0.0 && dryMix <= 1.0);
+
+      auto evenTap = lfo_.value() * displacement + tap;
+      auto oddTap = lfo_.quadPhaseValue() * displacement + tap;
       lfo_.increment();
 
       // Generate samples for each channel
       for (int channel = 0; channel < ins.size(); ++channel) {
         auto inputSample = *ins[channel]++;
-        auto delayedSample = inputSample;
-        if (displacement) {
-          delayedSample = delayLines_[channel].read(((channel & 1) && odd90) ? oddDelay : evenDelay);
-          delayLines_[channel].write(inputSample);
-        }
+        auto delayedSample = delayLines_[channel].read(((channel & 1) && odd90) ? oddTap : evenTap);
+        delayLines_[channel].write(inputSample);
         *outs[channel]++ = wetMix * delayedSample + dryMix * inputSample;
       }
     }
@@ -165,16 +145,18 @@ private:
 
   void doMIDIEvent(const AUMIDIEvent& midiEvent) noexcept {}
 
-  DSPHeaders::Parameters::MillisecondsParameter<AUValue> rate_;
-  DSPHeaders::Parameters::PercentageParameter<AUValue> depth_;
-  DSPHeaders::Parameters::MillisecondsParameter<AUValue> delay_;
-  DSPHeaders::Parameters::PercentageParameter<AUValue> dryMix_;
-  DSPHeaders::Parameters::PercentageParameter<AUValue> wetMix_;
-  DSPHeaders::Parameters::BoolParameter odd90_;
+  DSPHeaders::Parameters::MillisecondsParameter<> rate_;
+  DSPHeaders::Parameters::PercentageParameter<> depth_;
+  DSPHeaders::Parameters::MillisecondsParameter<> delay_;
+  DSPHeaders::Parameters::PercentageParameter<> dryMix_;
+  DSPHeaders::Parameters::PercentageParameter<> wetMix_;
+  DSPHeaders::Parameters::BoolParameter<> odd90_;
 
   double samplesPerMillisecond_;
 
   std::vector<DelayLine> delayLines_;
   LFO lfo_;
   AUAudioFrameCount rampRemaining_;
+  std::string name_;
+  os_log_t log_;
 };

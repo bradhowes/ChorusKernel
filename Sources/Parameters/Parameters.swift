@@ -85,14 +85,6 @@ extension Parameters {
     parameterTree.parameter(withAddress: address.parameterAddress) ?? missingParameter
   }
 
-  /**
-   Obtain a formatter for a parameter address. A format converts a parameter's value into a string representation.
-
-   - parameter address: the address to look for
-   - returns: the formatter for the parameter
-   */
-  public func valueFormatter(_ address: ParameterAddress) -> (AUValue) -> String { self[address].valueFormatter }
-
   private func installParameterValueFormatter() {
     parameterTree.implementorStringFromValueCallback = { param, valuePtr in
       let value: AUValue
@@ -101,7 +93,7 @@ extension Parameters {
       } else {
         value = param.value
       }
-      return String(format: param.stringFormatForValue, value) + param.suffix
+      return param.displayValueFormatter(value)
     }
   }
 
@@ -109,40 +101,33 @@ extension Parameters {
    Accept new values for the filter settings. Uses the AUParameterTree framework for communicating the changes to the
    AudioUnit.
    */
-  public func setValues(_ preset: Configuration) {
-    rate.value = preset.rate
-    delay.value = preset.delay
-    depth.value = preset.depth
-    dryMix.value = preset.dry
-    wetMix.value = preset.wet
-    odd90.value = preset.odd90
+  public func setValues(_ configuration: Configuration) {
+    rate.value = configuration.rate
+    delay.value = configuration.delay
+    depth.value = configuration.depth
+    dryMix.value = configuration.dry
+    wetMix.value = configuration.wet
+    odd90.value = configuration.odd90
   }
 }
 
-extension AUParameter {
+extension AUParameter: AUParameterFormatting {
 
   /// Obtain string to use to separate a formatted value from its units name
-  var unitSeparator: String {
+  public var unitSeparator: String {
     switch parameterAddress {
     case .rate, .delay: return " "
     default: return ""
     }
   }
 
-  /// Obtain the suffix to apply to a formatted value
-  var suffix: String { unitSeparator + (unitName ?? "") }
+  public var suffix: String { makeFormattingSuffix(from: unitName) }
 
-  /// Obtain the format to use in String(format:value) when formatting a values
-  var stringFormatForValue: String {
+  public var stringFormatForDisplayValue: String {
     switch parameterAddress {
     case .depth, .dry, .wet: return "%.0f"
     default: return "%.2f"
     }
-  }
-
-  /// Obtain a closure that will format parameter values into a string
-  var valueFormatter: (AUValue) -> String {
-    { value in String(format: self.stringFormatForValue, value) + self.suffix }
   }
 }
 
