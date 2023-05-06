@@ -22,12 +22,12 @@ public final class Parameters: NSObject, ParameterSource {
 
   /// Array of 2-tuple values that pair a factory preset name and its definition
   public let factoryPresetValues: [(name: String, preset: Configuration)] = [
-    ("Cadet", .init(rate: 1.68, delay: 8.3, depth: 100, dry: 50, wet: 100, odd90: 0)),
-    ("Wide Cadet", .init(rate: 1.68, delay: 8.3, depth: 100, dry: 50, wet: 100, odd90: 1)),
-    ("Wavy", .init(rate: 5.1, delay: 8.3, depth: 100, dry: 50, wet: 100, odd90: 0)),
-    ("Wavy Pong", .init(rate: 5.1, delay: 8.3, depth: 100, dry: 50, wet: 100, odd90: 1)),
-    ("Shimmer", .init(rate: 10.0, delay: 1.75, depth: 1.4, dry: 50, wet: 100, odd90: 1)),
-    ("Disturbed", .init(rate: 5.0, delay: 50.0, depth: 100.0, dry: 50, wet: 100, odd90: 1)),
+    ("Cadet", .init(rate: 0.64, delay: 1.1, depth: 50, dry: 50, wet: 50, odd90: 0)),
+    ("Wide Cadet", .init(rate: 0.64, delay: 1.1, depth: 50, dry: 50, wet: 50, odd90: 1)),
+    ("Wavy", .init(rate: 3.0, delay: 3.2, depth: 14, dry: 50, wet: 50, odd90: 0)),
+    ("Wavy Pong", .init(rate: 0.4, delay: 1.2, depth: 100, dry: 0, wet: 100, odd90: 1)),
+    ("Shimmer", .init(rate: 11.0, delay: 1.75, depth: 5, dry: 50, wet: 100, odd90: 1)),
+    ("Disturbed", .init(rate: 5.0, delay: 6, depth: 180.0, dry: 50, wet: 100, odd90: 1)),
   ]
 
   /// Array of `AUAudioUnitPreset` for the factory presets.

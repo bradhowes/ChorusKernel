@@ -27,10 +27,10 @@ public extension ParameterAddress {
 
   /// Obtain a ParameterDefinition for a parameter address enum.
   var parameterDefinition: ParameterDefinition {
-    let maxDelay: AUValue = 50.0
+    let maxDelay: AUValue = 10.0
     switch self {
     case .rate: return .defFloat("rate", localized: "Rate", address: ParameterAddress.rate,
-                                 range: 0.01...20.0, unit: .hertz)
+                                 range: 0.01...8.0, unit: .hertz)
     case .delay: return .defFloat("delay", localized: "Delay", address: ParameterAddress.delay,
                                   range: 0.0...maxDelay, unit: .milliseconds)
     case .depth: return .defPercent("depth", localized: "Depth", address: ParameterAddress.depth)
