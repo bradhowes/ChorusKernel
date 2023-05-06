@@ -28,15 +28,17 @@ public:
   using super = DSPHeaders::EventProcessor<Kernel>;
   friend super;
 
-  inline static constexpr size_t NUM_LFOS{10};
+  inline static constexpr size_t MAX_LFOS{50};
 
   /**
    Construct new kernel
 
    @param name the name to use for logging purposes.
    */
-  Kernel(std::string name) noexcept : super(), name_{name}, log_{os_log_create(name_.c_str(), "Kernel")}
+  Kernel(std::string name, size_t lfoCount = 10) noexcept :
+  super(), name_{name}, lfoCount_{lfoCount}, log_{os_log_create(name_.c_str(), "Kernel")}
   {
+    assert(lfoCount <= MAX_LFOS);
     os_log_debug(log_, "constructor");
   }
 
@@ -118,10 +120,11 @@ private:
 
   AUValue generate(AUValue inputSample, const DelayLine& delayLine, bool isEven) const noexcept {
     AUValue output{0.0};
-    for (auto& tap : taps_) {
+    for (size_t index = 0; index < lfoCount_; ++index) {
+      const auto& tap{taps_[index]};
       output += delayLine.read(isEven ? std::get<0>(tap) : std::get<1>(tap));
     }
-    return output / NUM_LFOS;
+    return output / lfoCount_;
   }
 
   void writeSample(DSPHeaders::BusBuffers ins, DSPHeaders::BusBuffers outs, bool odd90, AUValue wetMix, AUValue dryMix) noexcept {
@@ -142,7 +145,7 @@ private:
   }
 
   void calcTaps(AUValue nominalMilliseconds, AUValue displacementMilliseconds, bool odd90) noexcept {
-    for (size_t index = 0; index < NUM_LFOS; ++index) {
+    for (size_t index = 0; index < lfoCount_; ++index) {
       taps_[index] = calcTap(lfos_[index], nominalMilliseconds, displacementMilliseconds, odd90);
     }
   }
@@ -186,12 +189,13 @@ private:
   DSPHeaders::Parameters::PercentageParameter<> wetMix_;
   DSPHeaders::Parameters::BoolParameter<> odd90_;
 
+  size_t lfoCount_;
   double samplesPerMillisecond_;
   double maxDelayMilliseconds_{0};
 
   std::vector<DelayLine> delayLines_;
-  std::array<LFO, NUM_LFOS> lfos_{};
-  std::array<std::tuple<AUValue, AUValue>, NUM_LFOS> taps_{};
+  std::array<LFO, MAX_LFOS> lfos_{};
+  std::array<std::tuple<AUValue, AUValue>, MAX_LFOS> taps_{};
   std::string name_;
   os_log_t log_;
 

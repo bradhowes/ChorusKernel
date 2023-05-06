@@ -83,9 +83,9 @@ testRamping(Kernel& kernel, AUAudioFrameCount duration)
   AVAudioFormat* format = [[AVAudioFormat alloc] initStandardFormatWithSampleRate:44100.0 channels:2];
   kernel.setRenderingFormat(1, format, 512, 50.0);
 
-  kernel.setParameterValue(ParameterAddressDepth, 13.5, 0);
-  kernel.setParameterValue(ParameterAddressRate, 15.0, 0);
-  kernel.setParameterValue(ParameterAddressDelay, 50.0, 0);
+  kernel.setParameterValue(ParameterAddressDelay, 5.0, 0);
+  kernel.setParameterValue(ParameterAddressDepth, 13.0, 0);
+  kernel.setParameterValue(ParameterAddressRate, 4.0, 0);
   kernel.setParameterValue(ParameterAddressDry, 50.0, 0);
   kernel.setParameterValue(ParameterAddressWet, 50.0, 0);
   kernel.setParameterValue(ParameterAddressOdd90, 0.0, 0);
@@ -101,11 +101,11 @@ testRamping(Kernel& kernel, AUAudioFrameCount duration)
   XCTAssertEqualWithAccuracy(ptr[2], 0.001957, _epsilon);
   XCTAssertEqualWithAccuracy(ptr[3], 0.002935, _epsilon);
   XCTAssertEqualWithAccuracy(ptr[4], 0.003914, _epsilon);
-  XCTAssertEqualWithAccuracy(ptr[frames-5], 0.496086, _epsilon);
-  XCTAssertEqualWithAccuracy(ptr[frames-4], 0.497065, _epsilon);
-  XCTAssertEqualWithAccuracy(ptr[frames-3], 0.498043, _epsilon);
-  XCTAssertEqualWithAccuracy(ptr[frames-2], 0.499022, _epsilon);
-  XCTAssertEqualWithAccuracy(ptr[frames-1], 0.500000, _epsilon);
+  XCTAssertEqualWithAccuracy(ptr[frames-5], 0.703513, _epsilon);
+  XCTAssertEqualWithAccuracy(ptr[frames-4], 0.705332, _epsilon);
+  XCTAssertEqualWithAccuracy(ptr[frames-3], 0.707152, _epsilon);
+  XCTAssertEqualWithAccuracy(ptr[frames-2], 0.708971, _epsilon);
+  XCTAssertEqualWithAccuracy(ptr[frames-1], 0.710789, _epsilon);
 }
 
 - (void)testRenderingUnderRamping {
@@ -139,15 +139,15 @@ testRamping(Kernel& kernel, AUAudioFrameCount duration)
   AVAudioFormat* format = [[AVAudioFormat alloc] initStandardFormatWithSampleRate:44100.0 channels:2];
   kernel.setRenderingFormat(1, format, 512, 50.0);
 
-  kernel.setParameterValue(ParameterAddressDepth, 13.5, 0);
-  kernel.setParameterValue(ParameterAddressRate, 15.0, 0);
-  kernel.setParameterValue(ParameterAddressDelay, 50.0, 0);
+  kernel.setParameterValue(ParameterAddressDelay, 5.0, 0);
+  kernel.setParameterValue(ParameterAddressDepth, 13.0, 0);
+  kernel.setParameterValue(ParameterAddressRate, 4.0, 0);
   kernel.setParameterValue(ParameterAddressDry, 50.0, 0);
   kernel.setParameterValue(ParameterAddressWet, 50.0, 0);
   kernel.setParameterValue(ParameterAddressOdd90, 0.0, 0);
 
-  testRamping(kernel, 5);
-  kernel.setParameterValue(ParameterAddressDepth, 1.0, 5);
+  testRamping(kernel, 64);
+  kernel.setParameterValue(ParameterAddressDepth, 1.0, 64);
 
   AUAudioFrameCount frames = maxFrames;
   AVAudioPCMBuffer* buffer = [[AVAudioPCMBuffer alloc] initWithPCMFormat:format frameCapacity:maxFrames];
@@ -160,11 +160,11 @@ testRamping(Kernel& kernel, AUAudioFrameCount duration)
   XCTAssertEqualWithAccuracy(ptr[2], 0.001957, _epsilon);
   XCTAssertEqualWithAccuracy(ptr[3], 0.002935, _epsilon);
   XCTAssertEqualWithAccuracy(ptr[4], 0.003914, _epsilon);
-  XCTAssertEqualWithAccuracy(ptr[frames-5], 0.496086, _epsilon);
-  XCTAssertEqualWithAccuracy(ptr[frames-4], 0.497065, _epsilon);
-  XCTAssertEqualWithAccuracy(ptr[frames-3], 0.498043, _epsilon);
-  XCTAssertEqualWithAccuracy(ptr[frames-2], 0.499022, _epsilon);
-  XCTAssertEqualWithAccuracy(ptr[frames-1], 0.500000, _epsilon);
+  XCTAssertEqualWithAccuracy(ptr[frames-5], 0.769908, _epsilon);
+  XCTAssertEqualWithAccuracy(ptr[frames-4], 0.771854, _epsilon);
+  XCTAssertEqualWithAccuracy(ptr[frames-3], 0.773801, _epsilon);
+  XCTAssertEqualWithAccuracy(ptr[frames-2], 0.775747, _epsilon);
+  XCTAssertEqualWithAccuracy(ptr[frames-1], 0.777694, _epsilon);
 }
 
 @end
