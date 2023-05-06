@@ -27,7 +27,7 @@ public final class Parameters: NSObject, ParameterSource {
     ("Wavy", .init(rate: 3.0, delay: 3.2, depth: 14, dry: 50, wet: 50, odd90: 0)),
     ("Wavy Pong", .init(rate: 0.4, delay: 1.2, depth: 100, dry: 0, wet: 100, odd90: 1)),
     ("Shimmer", .init(rate: 11.0, delay: 1.75, depth: 5, dry: 50, wet: 100, odd90: 1)),
-    ("Disturbed", .init(rate: 5.0, delay: 6, depth: 180.0, dry: 50, wet: 100, odd90: 1)),
+    ("Disturbed", .init(rate: 3.0, delay: 6, depth: 180.0, dry: 50, wet: 100, odd90: 1)),
   ]
 
   /// Array of `AUAudioUnitPreset` for the factory presets.
