@@ -7,8 +7,6 @@
 
 void Kernel::setParameterValue(AUParameterAddress address, AUValue value, AUAudioFrameCount duration) noexcept {
   assert(duration >= 0);
-
-  if (duration > rampRemaining_) rampRemaining_ = duration;
   switch (address) {
     case ParameterAddressRate: setRate(value, duration); break;
     case ParameterAddressDepth: depth_.set(value, duration); break;

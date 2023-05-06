@@ -5,6 +5,7 @@
 #import <os/log.h>
 #import <algorithm>
 #import <string>
+#import <tuple>
 #import <AVFoundation/AVFoundation.h>
 
 #import "DSPHeaders/BoolParameter.hpp"
@@ -93,7 +94,7 @@ private:
     lfo_.setFrequency(rate, rampingDuration);
   }
 
-  void setParameterFromEvent(const AUParameterEvent& event) noexcept {
+  void doParameterEvent(const AUParameterEvent& event) noexcept {
     setParameterValue(event.parameterAddress, event.value, event.rampDurationSampleFrames);
   }
 
@@ -107,38 +108,56 @@ private:
     }
   }
 
+  void writeSample(DSPHeaders::BusBuffers ins, DSPHeaders::BusBuffers outs, AUValue oddTap, AUValue evenTap,
+                   AUValue wetMix, AUValue dryMix) noexcept {
+    for (int channel = 0; channel < ins.size(); ++channel) {
+      auto inputSample = *ins[channel]++;
+      auto delayedSample = delayLines_[channel].read((channel & 1) ? oddTap : evenTap);
+      delayLines_[channel].write(inputSample);
+      *outs[channel]++ = wetMix * delayedSample + dryMix * inputSample;
+    }
+  }
+
+  std::tuple<AUValue, AUValue> taps(AUValue nominalMilliseconds, AUValue displacementMilliseconds, bool odd90) noexcept {
+    auto evenTap = (nominalMilliseconds + lfo_.value() * displacementMilliseconds) * samplesPerMillisecond_;
+    auto oddTap = odd90 ? (nominalMilliseconds + lfo_.quadPhaseValue() * displacementMilliseconds) * samplesPerMillisecond_ : evenTap;
+    lfo_.increment();
+    return {evenTap, oddTap};
+  }
+
   void doRendering(NSInteger outputBusNumber, DSPHeaders::BusBuffers ins, DSPHeaders::BusBuffers outs,
                    AUAudioFrameCount frameCount) noexcept {
     auto odd90 = odd90_.get();
-
-    // Generate frames -- note that in the ramping case, frameCount == 1
-    for (; frameCount > 0; --frameCount) {
-
+    if (isRamping() || frameCount == 1) {
+      assert(frameCount == 1);
       // Nominal position of tap into delay line
-      auto tap = delay_.frameValue();
-
+      auto nominal = delay_.frameValue();
       // Fraction of overall displacement available to move the tap
       auto displacementFraction = depth_.frameValue();
       assert(displacementFraction >= 0.0 && displacementFraction <= 1.0);
-
       // Displacement is the distance from the nominal tap to a non-zero min value.
-      auto displacement = tap * displacementFraction;
-
-      auto wetMix = wetMix_.frameValue();
+      auto displacement = nominal * displacementFraction;
+      // Calculate tap point(s) into the delay line
+      auto [evenTap, oddTap] = taps(nominal, displacement, odd90);
+      writeSample(ins, outs, oddTap, evenTap, wetMix_.frameValue(), dryMix_.frameValue());
+    } else {
+      // Nominal position of tap into delay line
+      auto nominal = delay_.get();
+      // Fraction of overall displacement available to move the tap
+      auto displacementFraction = depth_.normalized();
+      assert(displacementFraction >= 0.0 && displacementFraction <= 1.0);
+      // Displacement is the distance from the nominal tap to a non-zero min value.
+      auto displacement = nominal * displacementFraction;
+      // Mixing weights
+      auto wetMix = wetMix_.normalized();
       assert(wetMix >= 0.0 && wetMix <= 1.0);
-      auto dryMix = dryMix_.frameValue();
+      auto dryMix = dryMix_.normalized();
       assert(dryMix >= 0.0 && dryMix <= 1.0);
 
-      auto evenTap = lfo_.value() * displacement + tap;
-      auto oddTap = lfo_.quadPhaseValue() * displacement + tap;
-      lfo_.increment();
-
-      // Generate samples for each channel
-      for (int channel = 0; channel < ins.size(); ++channel) {
-        auto inputSample = *ins[channel]++;
-        auto delayedSample = delayLines_[channel].read(((channel & 1) && odd90) ? oddTap : evenTap);
-        delayLines_[channel].write(inputSample);
-        *outs[channel]++ = wetMix * delayedSample + dryMix * inputSample;
+      // The only thing that varies here per frame is the LFO
+      for (; frameCount > 0; --frameCount) {
+        auto [evenTap, oddTap] = taps(nominal, displacement, odd90);
+        writeSample(ins, outs, oddTap, evenTap, wetMix, dryMix);
       }
     }
   }
@@ -156,7 +175,8 @@ private:
 
   std::vector<DelayLine> delayLines_;
   LFO lfo_;
-  AUAudioFrameCount rampRemaining_;
   std::string name_;
   os_log_t log_;
+
+  friend void testRamping(Kernel& kernel, AUAudioFrameCount duration);
 };
