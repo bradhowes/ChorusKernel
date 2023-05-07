@@ -12,7 +12,8 @@ NS_ASSUME_NONNULL_BEGIN
  */
 @interface KernelBridge : NSObject
 
-- (nonnull id)init:(NSString*)appExtensionName maxDelayMilliseconds:(AUValue)maxDelayMilliseconds;
+- (nonnull id)init:(NSString*)appExtensionName maxDelayMilliseconds:(AUValue)maxDelayMilliseconds
+           numLFOs:(size_t)numLFOs;
 
 @end
 

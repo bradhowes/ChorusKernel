@@ -10,9 +10,10 @@
   AUValue maxDelayMilliseconds_;
 }
 
-- (instancetype)init:(NSString*)appExtensionName maxDelayMilliseconds:(AUValue)maxDelayMilliseconds {
+- (instancetype)init:(NSString*)appExtensionName maxDelayMilliseconds:(AUValue)maxDelayMilliseconds
+             numLFOs:(size_t)numLFOs {
   if (self = [super init]) {
-    self->kernel_ = new Kernel(std::string(appExtensionName.UTF8String));
+    self->kernel_ = new Kernel(std::string(appExtensionName.UTF8String, numLFOs));
     self->maxDelayMilliseconds_ = maxDelayMilliseconds;
   }
   return self;
