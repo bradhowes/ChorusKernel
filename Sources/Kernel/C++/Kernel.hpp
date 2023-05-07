@@ -90,7 +90,7 @@ private:
       lfo.setPhase(index / lfos_.size());
     }
 
-    auto size = maxDelayMilliseconds * samplesPerMillisecond_ + 1;
+    auto size = maxDelayMilliseconds * samplesPerMillisecond_ * 2 + 1;
     delayLines_.clear();
     for (auto index = 0; index < channelCount; ++index) {
       delayLines_.emplace_back(size, DelayLine::Interpolator::cubic4thOrder);
