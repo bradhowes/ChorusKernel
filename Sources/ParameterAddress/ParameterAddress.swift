@@ -32,7 +32,7 @@ public extension ParameterAddress {
     case .rate: return .defFloat("rate", localized: "Rate", address: ParameterAddress.rate,
                                  range: 0.01...8.0, unit: .hertz)
     case .delay: return .defFloat("delay", localized: "Delay", address: ParameterAddress.delay,
-                                  range: 0.0...maxDelay, unit: .milliseconds)
+                                  range: 0.01...maxDelay, unit: .milliseconds)
     case .depth: return .defPercent("depth", localized: "Depth", address: ParameterAddress.depth)
     case .dry: return .defPercent("dry", localized: "Dry", address: ParameterAddress.dry)
     case .wet: return .defPercent("wet", localized: "Wet", address: ParameterAddress.wet)
