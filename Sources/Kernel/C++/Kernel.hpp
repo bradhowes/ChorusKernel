@@ -61,9 +61,19 @@ public:
 
    @param address the address of the parameter that changed
    @param value the new value for the parameter
-   @param rampDuration number of frames to ramp to the new value
    */
-  void setParameterValue(AUParameterAddress address, AUValue value, AUAudioFrameCount rampDuration) noexcept;
+  void setParameterValue(AUParameterAddress address, AUValue value) noexcept {
+    setRampedParameterValue(address, value, AUAudioFrameCount(50));
+  }
+
+  /**
+   Process an AU parameter value change by updating the kernel.
+
+   @param address the address of the parameter that changed
+   @param value the new value for the parameter
+   @param duration the number of samples to adjust over
+   */
+  void setRampedParameterValue(AUParameterAddress address, AUValue value, AUAudioFrameCount duration) noexcept;
 
   /**
    Obtain from the kernel the current value of an AU parameter.
@@ -105,7 +115,7 @@ private:
   }
 
   void doParameterEvent(const AUParameterEvent& event) noexcept {
-    setParameterValue(event.parameterAddress, event.value, event.rampDurationSampleFrames);
+    setRampedParameterValue(event.parameterAddress, event.value, event.rampDurationSampleFrames);
   }
 
   void doRenderingStateChanged(bool rendering) {

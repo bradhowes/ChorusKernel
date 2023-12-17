@@ -18,7 +18,7 @@ final class ParameterAddressTests: XCTestCase {
     XCTAssertFalse(rate.logScale)
 
     let delay = ParameterAddress.delay.parameterDefinition
-    XCTAssertEqual(delay.range.lowerBound, 0.0)
+    XCTAssertEqual(delay.range.lowerBound, 0.01)
     XCTAssertEqual(delay.range.upperBound, 10.0)
     XCTAssertEqual(delay.unit, .milliseconds)
     XCTAssertTrue(delay.ramping)

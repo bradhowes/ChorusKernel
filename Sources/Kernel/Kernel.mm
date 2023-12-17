@@ -5,7 +5,7 @@
 
 @import ParameterAddress;
 
-void Kernel::setParameterValue(AUParameterAddress address, AUValue value, AUAudioFrameCount duration) noexcept {
+void Kernel::setRampedParameterValue(AUParameterAddress address, AUValue value, AUAudioFrameCount duration) noexcept {
   assert(duration >= 0);
   switch (address) {
     case ParameterAddressRate: setRate(value, duration); break;

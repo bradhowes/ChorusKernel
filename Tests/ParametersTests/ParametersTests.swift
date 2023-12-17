@@ -5,7 +5,16 @@ import ParameterAddress
 import Kernel
 
 class MockParameterHandler: AUParameterHandler {
+  func parameterValueObserverBlock() -> AUImplementorValueObserver {
+    self.set
+  }
+  
+  func parameterValueProviderBlock() -> AUImplementorValueProvider {
+    self.get
+  }
+  
   var mapping = [AUParameterAddress: AUValue]()
+
   func set(_ parameter: AUParameter, value: AUValue) { mapping[parameter.address] = value }
   func get(_ parameter: AUParameter) -> AUValue { mapping[parameter.address] ?? 0.0 }
 }
