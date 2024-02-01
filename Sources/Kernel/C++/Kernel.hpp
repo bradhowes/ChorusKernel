@@ -105,8 +105,14 @@ private:
     }
   }
 
-  void setRate(AUValue rate, AUAudioFrameCount rampingDuration) {
-    rate_.set(rate, rampingDuration);
+  void setRatePending(AUValue rate) {
+    for(auto& lfo : lfos_) {
+      lfo.setFrequencyPending(rate);
+    }
+  }
+
+  void setRateRamping(AUValue rate, AUAudioFrameCount rampingDuration) {
+    rate_.set(rate, 0);
     for(auto& lfo : lfos_) {
       lfo.setFrequency(rate, rampingDuration);
     }

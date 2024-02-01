@@ -7,7 +7,7 @@
 
 AUAudioFrameCount Kernel::setRampedParameterValue(AUParameterAddress address, AUValue value, AUAudioFrameCount duration) noexcept {
   switch (address) {
-    case ParameterAddressRate: setRate(value, duration); return duration;
+    case ParameterAddressRate: setRateRamping(value, duration); return duration;
     case ParameterAddressDepth: depth_.set(value, duration); return duration;
     case ParameterAddressDelay: delay_.set(value, duration); return duration;
     case ParameterAddressDry: dryMix_.set(value, duration); return duration;
@@ -19,7 +19,7 @@ AUAudioFrameCount Kernel::setRampedParameterValue(AUParameterAddress address, AU
 
 void Kernel::setParameterValuePending(AUParameterAddress address, AUValue value) noexcept {
   switch (address) {
-    case ParameterAddressRate: rate_.setPending(value); break;
+    case ParameterAddressRate: setRatePending(value); break;
     case ParameterAddressDepth: depth_.setPending(value); break;
     case ParameterAddressDelay: delay_.setPending(value); break;
     case ParameterAddressDry: dryMix_.setPending(value); break;
