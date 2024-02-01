@@ -10,13 +10,13 @@
 #import <vector>
 #import <AVFoundation/AVFoundation.h>
 
-#import "DSPHeaders/BoolParameter.hpp"
 #import "DSPHeaders/BusBuffers.hpp"
 #import "DSPHeaders/DelayBuffer.hpp"
 #import "DSPHeaders/EventProcessor.hpp"
-#import "DSPHeaders/MillisecondsParameter.hpp"
 #import "DSPHeaders/LFO.hpp"
-#import "DSPHeaders/PercentageParameter.hpp"
+#import "DSPHeaders/Parameters/Bool.hpp"
+#import "DSPHeaders/Parameters/Milliseconds.hpp"
+#import "DSPHeaders/Parameters/Percentage.hpp"
 
 /**
  The audio processing kernel that generates a "chorus" effect by combining an audio signal with a slightly delayed copy
@@ -40,6 +40,12 @@ public:
   {
     assert(lfoCount <= MAX_LFOS);
     os_log_debug(log_, "constructor");
+    registerParameter(rate_);
+    registerParameter(depth_);
+    registerParameter(delay_);
+    registerParameter(dryMix_);
+    registerParameter(wetMix_);
+    registerParameter(odd90_);
   }
 
   /**
@@ -62,9 +68,9 @@ public:
    @param address the address of the parameter that changed
    @param value the new value for the parameter
    */
-  void setParameterValue(AUParameterAddress address, AUValue value) noexcept {
-    setRampedParameterValue(address, value, AUAudioFrameCount(50));
-  }
+  void setParameterValuePending(AUParameterAddress address, AUValue value) noexcept;
+
+  AUValue getParameterValuePending(AUParameterAddress address) const noexcept;
 
   /**
    Process an AU parameter value change by updating the kernel.
@@ -73,15 +79,7 @@ public:
    @param value the new value for the parameter
    @param duration the number of samples to adjust over
    */
-  void setRampedParameterValue(AUParameterAddress address, AUValue value, AUAudioFrameCount duration) noexcept;
-
-  /**
-   Obtain from the kernel the current value of an AU parameter.
-
-   @param address the address of the parameter to return
-   @returns current parameter value
-   */
-  AUValue getParameterValue(AUParameterAddress address) const noexcept;
+  AUAudioFrameCount setRampedParameterValue(AUParameterAddress address, AUValue value, AUAudioFrameCount duration) noexcept;
 
 private:
   using DelayLine = DSPHeaders::DelayBuffer<AUValue>;
@@ -114,19 +112,11 @@ private:
     }
   }
 
-  void doParameterEvent(const AUParameterEvent& event) noexcept {
-    setRampedParameterValue(event.parameterAddress, event.value, event.rampDurationSampleFrames);
+  AUAudioFrameCount doParameterEvent(const AUParameterEvent& event, AUAudioFrameCount duration) noexcept {
+    return setRampedParameterValue(event.parameterAddress, event.value, duration);
   }
 
-  void doRenderingStateChanged(bool rendering) {
-    if (!rendering) {
-      rate_.stopRamping();
-      depth_.stopRamping();
-      delay_.stopRamping();
-      dryMix_.stopRamping();
-      wetMix_.stopRamping();
-    }
-  }
+  void doRenderingStateChanged(bool rendering) {}
 
   AUValue generate(AUValue inputSample, const DelayLine& delayLine, bool isEven) const noexcept {
     AUValue output{0.0};
@@ -167,22 +157,17 @@ private:
   void doRendering(NSInteger outputBusNumber, DSPHeaders::BusBuffers ins, DSPHeaders::BusBuffers outs,
                    AUAudioFrameCount frameCount) noexcept {
     auto odd90 = odd90_.get();
-    if (isRamping() || frameCount == 1) {
-      assert(frameCount == 1);
+    if (frameCount == 1) {
       auto nominal = delay_.frameValue();
       auto displacementFraction = depth_.frameValue();
-      assert(displacementFraction >= 0.0 && displacementFraction <= 1.0);
       calcTaps(nominal, calcDisplacement(nominal, displacementFraction), odd90);
       writeSample(ins, outs, odd90, wetMix_.frameValue(), dryMix_.frameValue());
     } else {
       auto nominal = delay_.get();
-      auto displacementFraction = depth_.normalized();
-      assert(displacementFraction >= 0.0 && displacementFraction <= 1.0);
+      auto displacementFraction = depth_.get();
       auto displacement = calcDisplacement(nominal, displacementFraction);
-      auto wetMix = wetMix_.normalized();
-      assert(wetMix >= 0.0 && wetMix <= 1.0);
-      auto dryMix = dryMix_.normalized();
-      assert(dryMix >= 0.0 && dryMix <= 1.0);
+      auto wetMix = wetMix_.get();
+      auto dryMix = dryMix_.get();
       for (; frameCount > 0; --frameCount) {
         calcTaps(nominal, displacement, odd90);
         writeSample(ins, outs, odd90, wetMix, dryMix);
@@ -192,12 +177,12 @@ private:
 
   void doMIDIEvent(const AUMIDIEvent& midiEvent) noexcept {}
 
-  DSPHeaders::Parameters::MillisecondsParameter<> rate_;
-  DSPHeaders::Parameters::PercentageParameter<> depth_;
-  DSPHeaders::Parameters::MillisecondsParameter<> delay_;
-  DSPHeaders::Parameters::PercentageParameter<> dryMix_;
-  DSPHeaders::Parameters::PercentageParameter<> wetMix_;
-  DSPHeaders::Parameters::BoolParameter<> odd90_;
+  DSPHeaders::Parameters::Milliseconds rate_;
+  DSPHeaders::Parameters::Percentage depth_;
+  DSPHeaders::Parameters::Milliseconds delay_;
+  DSPHeaders::Parameters::Percentage dryMix_;
+  DSPHeaders::Parameters::Percentage wetMix_;
+  DSPHeaders::Parameters::Bool odd90_;
 
   size_t lfoCount_;
   double samplesPerMillisecond_;

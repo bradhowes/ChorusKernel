@@ -5,12 +5,6 @@
 
 #import "../../Sources/Kernel/C++/Kernel.hpp"
 
-void
-testRamping(Kernel& kernel, AUAudioFrameCount duration)
-{
-  kernel.setRampingDuration(duration);
-}
-
 @import ParameterAddress;
 
 @interface KernelTests : XCTestCase
@@ -31,25 +25,25 @@ testRamping(Kernel& kernel, AUAudioFrameCount duration)
   AVAudioFormat* format = [[AVAudioFormat alloc] initStandardFormatWithSampleRate:44100.0 channels:2];
   kernel->setRenderingFormat(1, format, 100, 20.0);
 
-  kernel->setRampedParameterValue(ParameterAddressDepth, 13.5, 0);
-  XCTAssertEqualWithAccuracy(kernel->getParameterValue(ParameterAddressDepth), 13.5, _epsilon);
+  kernel->setParameterValuePending(ParameterAddressDepth, 13.5);
+  XCTAssertEqualWithAccuracy(kernel->getParameterValuePending(ParameterAddressDepth), 13.5, _epsilon);
 
-  kernel->setRampedParameterValue(ParameterAddressRate, 30.0, 0);
-  XCTAssertEqualWithAccuracy(kernel->getParameterValue(ParameterAddressRate), 30.0, _epsilon);
+  kernel->setParameterValuePending(ParameterAddressRate, 30.0);
+  XCTAssertEqualWithAccuracy(kernel->getParameterValuePending(ParameterAddressRate), 30.0, _epsilon);
 
-  kernel->setRampedParameterValue(ParameterAddressDelay, 20.0, 0);
-  XCTAssertEqualWithAccuracy(kernel->getParameterValue(ParameterAddressDelay), 20.0, _epsilon);
+  kernel->setParameterValuePending(ParameterAddressDelay, 20.0);
+  XCTAssertEqualWithAccuracy(kernel->getParameterValuePending(ParameterAddressDelay), 20.0, _epsilon);
 
-  kernel->setRampedParameterValue(ParameterAddressDry, 50.0, 0);
-  XCTAssertEqualWithAccuracy(kernel->getParameterValue(ParameterAddressDry), 50.0, _epsilon);
+  kernel->setParameterValuePending(ParameterAddressDry, 50.0);
+  XCTAssertEqualWithAccuracy(kernel->getParameterValuePending(ParameterAddressDry), 50.0, _epsilon);
 
-  kernel->setRampedParameterValue(ParameterAddressWet, 60.0, 0);
-  XCTAssertEqualWithAccuracy(kernel->getParameterValue(ParameterAddressWet), 60.0, _epsilon);
+  kernel->setParameterValuePending(ParameterAddressWet, 60.0);
+  XCTAssertEqualWithAccuracy(kernel->getParameterValuePending(ParameterAddressWet), 60.0, _epsilon);
 
-  kernel->setRampedParameterValue(ParameterAddressOdd90, 0.0, 0);
-  XCTAssertEqualWithAccuracy(kernel->getParameterValue(ParameterAddressOdd90), 0.0, _epsilon);
-  kernel->setRampedParameterValue(ParameterAddressOdd90, 1.0, 0);
-  XCTAssertEqualWithAccuracy(kernel->getParameterValue(ParameterAddressOdd90), 1.0, _epsilon);
+  kernel->setParameterValuePending(ParameterAddressOdd90, 0.0);
+  XCTAssertEqualWithAccuracy(kernel->getParameterValuePending(ParameterAddressOdd90), 0.0, _epsilon);
+  kernel->setParameterValuePending(ParameterAddressOdd90, 1.0);
+  XCTAssertEqualWithAccuracy(kernel->getParameterValuePending(ParameterAddressOdd90), 1.0, _epsilon);
 }
 
 - (void)testRendering {
@@ -146,7 +140,6 @@ testRamping(Kernel& kernel, AUAudioFrameCount duration)
   kernel.setRampedParameterValue(ParameterAddressWet, 50.0, 0);
   kernel.setRampedParameterValue(ParameterAddressOdd90, 0.0, 0);
 
-  testRamping(kernel, 64);
   kernel.setRampedParameterValue(ParameterAddressDepth, 1.0, 64);
 
   AUAudioFrameCount frames = maxFrames;
